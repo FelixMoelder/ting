@@ -1,0 +1,10 @@
+name: ting
+channels:
+- bioconda
+- defaults
+dependencies:
+- python=3.6.4
+- networkx=2.0
+- numpy=1.13.3
+- scipy=1.1.0
+
