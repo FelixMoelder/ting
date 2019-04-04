@@ -9,6 +9,7 @@ from collections import Counter
 from multiprocessing import Pool # depreciated
 from scipy.stats import fisher_exact
 
+
 def main():
     parser = argparse.ArgumentParser()
     argument_parser(parser)
@@ -29,20 +30,16 @@ def main():
                 kmer_preprocessing(tcr_sequences, args)
         else:
             print('Motif file found')
-
         # Clustering by local similarity
         print('Local clustering')
         local_clusters = local_clustering(tcr_sequences, args.kmer_file)
         final_clusters.add_edges_from(local_clusters.edges())
-
     # Clustering by global similarity
     if cluster_global:
         print('Global clustering')
         global_clusters = global_clustering(tcr_sequences, use_structural_boundaries)
         final_clusters.add_edges_from(global_clusters.edges())
-
     output_clusters(args.output, final_clusters)
-
 
 
 def kmer_preprocessing(tcr_sequences, args):
@@ -62,6 +59,7 @@ def kmer_preprocessing(tcr_sequences, args):
     print('Unique kmers in control set: {len(kmers_control)}')
     print('Identifying significant kmers')
     identify_significant_kmers(number_seqs_condition, kmers_condition, number_seqs_control, kmers_control, args.max_p_value, args.kmer_file)
+
 
 # --------------Optional preprocessing as implemented in gliph-------------------
 def kmer_preprocessing_gliph(tcr_sequences, args):
@@ -151,7 +149,6 @@ def get_minfoldchange(kmer_count):
 def identify_significant_kmers(seqs_condition, kmers_condition, seqs_control, kmers_control, p_value_threshold, kmer_file):
     kmers_condition_count = sum(kmers_condition.values())
     kmers_control_count = sum(kmers_control.values())
-
     seqs_condition += 2 # add pseudo count
     seqs_control += 2 # add pseudo count
     bonferroni_threshold = p_value_threshold/len(kmers_condition)
@@ -166,8 +163,6 @@ def identify_significant_kmers(seqs_condition, kmers_condition, seqs_control, km
                 oddsratio, p_value = fisher_exact(table, alternative='less')
                 if p_value <= bonferroni_threshold:
                     print(f'{condition_kmer}\t{odds}\t{p_value}\t{condition_count}\t{control_count}', file=output_file)
-
-
 
 
 def load_tcr_sequences(sequence_file):
