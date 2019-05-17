@@ -6,7 +6,7 @@ import warnings
 import numpy as np
 import networkx as nx
 from collections import Counter
-from multiprocessing import Pool # depreciated
+from multiprocessing import Pool
 from scipy.stats import fisher_exact
 
 
@@ -17,6 +17,7 @@ def main():
     cluster_local = args.no_local
     cluster_global = args.no_global
     use_structural_boundaries = args.use_structural_boundaries
+    print(f"Loading sequences from: {args.tcr_sequences}")
     tcr_sequences = load_filtered_tcr_sequences(args.tcr_sequences) if args.stringent_filtering else load_tcr_sequences(args.tcr_sequences)
     print(f'Unique sequences loaded: {len(tcr_sequences)}')
     final_clusters = nx.Graph()
@@ -157,12 +158,10 @@ def identify_significant_kmers(seqs_condition, kmers_condition, seqs_control, km
          for condition_kmer, condition_count in kmers_condition.items():
             control_count = kmers_control[condition_kmer] + 1 # add one pseudo occurence
             condition_count += 1 # add one pseudo occurence
-            odds = (condition_count/seqs_condition)/(control_count/seqs_control)
-            if odds > 2:
-                table = [[control_count, condition_count], [seqs_control, seqs_condition]]
-                oddsratio, p_value = fisher_exact(table, alternative='less')
-                if p_value <= bonferroni_threshold:
-                    print(f'{condition_kmer}\t{odds}\t{p_value}\t{condition_count}\t{control_count}', file=output_file)
+            table = [[control_count, condition_count], [seqs_control, seqs_condition]]
+            oddsratio, p_value = fisher_exact(table, alternative='less')
+            if p_value <= bonferroni_threshold:
+                print(f'{condition_kmer}\t{oddsratio}\t{p_value}\t{condition_count}\t{control_count}', file=output_file)
 
 
 def load_tcr_sequences(sequence_file):
@@ -322,6 +321,7 @@ def union_clusters(clusters):
 
 
 def load_kmers(input_file):
+    print(f"Loading kmers from {input_file}")
     two_mers = []
     three_mers = []
     clusters = nx.Graph()
