@@ -16,7 +16,7 @@ setup(
     long_description_content_type="text/markdown",
     zip_safe=False,
     license='MIT License',
-    url='https://bitbucket.org/genomeinformatics/ting',
+    url='https://github.com/FelixMoelder/ting',
     packages=['ting', 'scripts'],
     install_requires=['networkx>=2.0', 'numpy>=1.13', 'scipy>=1.1'],
     entry_points={
