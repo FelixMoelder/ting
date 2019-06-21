@@ -96,7 +96,7 @@ def kmer_preprocessing_gliph(tcr_sequences, args):
         simulated_kmers = p.starmap(simulate_sample_set, simulation_params)
 
     print('Analyzing kmers')
-    analyze_kmers(most_frequent_kmers, simulated_kmers, number_sequences, 1000, args.max_p_value,
+    analyze_kmers(most_frequent_kmers, simulated_kmers, number_sequences, 1000, args.gliph_minp,
                   args.kmer_file)
 
 
@@ -156,11 +156,12 @@ def identify_significant_kmers(seqs_condition, kmers_condition, seqs_control, km
     with open(kmer_file, 'w') as output_file:
          print('Motif\todds\tp-value\tcondition_count\tcontrol_count', file=output_file)
          for condition_kmer, condition_count in kmers_condition.items():
+            minfoldchange = get_minfoldchange(condition_count)
             control_count = kmers_control[condition_kmer] + 1 # add one pseudo occurence
             condition_count += 1 # add one pseudo occurence
             table = [[control_count, condition_count], [seqs_control, seqs_condition]]
             oddsratio, p_value = fisher_exact(table, alternative='less')
-            if p_value <= bonferroni_threshold:
+            if p_value <= bonferroni_threshold and oddsratio < 1/minfoldchange:
                 print(f'{condition_kmer}\t{oddsratio}\t{p_value}\t{condition_count}\t{control_count}', file=output_file)
 
 
@@ -371,6 +372,10 @@ def argument_parser(parser):
                         help='p-value threshold for identifying significant motifs by fisher exact test',
                         type=float,
                         default=0.05)
+    parser.add_argument('--gliph_minp',
+                        help='probability threshold for identifying significant motifs by gliph exact test',
+                        type=float,
+                        default=0.001)
     parser.add_argument('-f', '--stringent_filtering',
                         help='If used only TCRs starting with a cystein and ending with phenylalanine will be used',
                         action='store_true')
