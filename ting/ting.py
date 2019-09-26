@@ -117,10 +117,10 @@ def analyze_kmers(most_frequent_kmers, simulated_kmers, set_size, number_simulat
             average = 0
             for simulated_set in simulated_kmers:
                 kmer_occurrence_sim = simulated_set[kmer]
-                if kmer_occurrence_sim >= kmer_count_sample:
+                if kmer_occurrence_control >= kmer_count_sample:
                     odds_as_enriched_as_discovery += 1/number_simulations
-                highest = kmer_occurrence_sim if kmer_occurrence_sim > highest else highest
-                average += kmer_occurrence_sim/number_simulations
+                highest = kmer_occurrence_control if kmer_occurrence_control > highest else highest
+                average += kmer_occurrence_control/number_simulations
             if average > 0:
                 ove = kmer_count_sample/average
             else:
@@ -136,6 +136,7 @@ def analyze_kmers(most_frequent_kmers, simulated_kmers, set_size, number_simulat
                     print(f'{kmer}\t{kmer_count_sample}\t{average}\t{highest}\t{ove}\t{odds_as_enriched_as_discovery}',
                           file=output_file)
 
+# ----------- Gliph's kmer preprocessing ends here-----------------------
 
 def get_minfoldchange(kmer_count):
     if kmer_count == 2:
@@ -144,7 +145,7 @@ def get_minfoldchange(kmer_count):
         return 100
     elif kmer_count >= 4:
         return 10
-# ----------- Gliph's kmer preprocessing ends here-----------------------
+
 
 
 def identify_significant_kmers(seqs_condition, kmers_condition, seqs_control, kmers_control, p_value_threshold, kmer_file):
@@ -373,7 +374,7 @@ def argument_parser(parser):
                         type=float,
                         default=0.05)
     parser.add_argument('--gliph_minp',
-                        help='probability threshold for identifying significant motifs by gliph exact test',
+                        help='probability threshold for identifying significant motifs by gliph test',
                         type=float,
                         default=0.001)
     parser.add_argument('-f', '--stringent_filtering',
