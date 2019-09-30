@@ -299,28 +299,57 @@ def cluster_kmers(kmers, clusters):
     return clusters
 
 
-def cluster_cdr3b(kmer_clusters, tcr_sequences):
-    clusters_tcr = [nx.Graph() for _ in range(len(kmer_clusters))]
-    # add sequences to clusters
-    for sequence in tcr_sequences:
-        sequence_seen = False
-        for i, kmer_cluster in enumerate(kmer_clusters):
-            for kmer in kmer_cluster:
-                if kmer in sequence[3:-3]:
-                    clusters_tcr[i].add_node(sequence)
-                    sequence_seen = True
-                    break
-        # add sequence if not in cluster
-        if not sequence_seen:
-            new_cluster = nx.Graph()
-            new_cluster.add_node(sequence)
-            clusters_tcr.append(new_cluster)
-    # connect nodes
-    for i in range(len(clusters_tcr)):
-        clusters_tcr[i].add_path(clusters_tcr[i].nodes
-    # join clusters
-    clusters_tcr = nx.compose_all(clusters_tcr)
-    return clusters_tcr
+from itertools import combinations
+
+cluster_sequences(kmers, sequences):
+    sequences = np.array(sequences)
+    representatives = [i for i in sequences]
+    for kmer in kmers:
+        subcluster = []
+        for i, sequence in enumerate(sequences):
+            if kmer in sequence:
+                subcluster.append(i)
+        update_representatives(representatives, subcluster)
+    clusters_nodes = summary_clusters(sequences, representatives)
+    clusters = [nx.Graph(nodes) for nodes in clusters_nodes]
+    clusters = [cluster.add_path(cluster.nodes for cluster in clusters]
+    return nx.compose_all(clusters)
+
+
+
+def summary_clusters(sequences, representatives):
+    clusters = dict()
+    for i, sequence in enumerate(sequences):
+        cluster_id = find_representative(representatives, i)
+        if cluster_id not in cluster:
+            clusters[cluster_id] = [sequence]
+        else:
+            clusters[cluster_id].append(sequence)
+    return clusters
+
+
+def cluster_sequences(representatives, subclusters):
+    for i, j in combinations(subclusters):
+        representatives = union(representatives, i, j)
+
+
+def union(representatives, i, j):
+    representative_i = find_representative(i)
+    representative_j = find_representative(j)
+    if representative_i < representative_j:
+        representatives[j] = representative_i
+    elif representative_i > representative_j:
+        representatives[i] = representative_j
+    return representatives
+
+
+def find_representative(representatives, i):
+    if representatives[i] == i
+        return representatives, i
+    else:
+        representatives, representative = find_represetative(representatives, representatives[i])
+        representatives[i] = representative
+        return representatives, representative
 
 
 def union_clusters(clusters):
