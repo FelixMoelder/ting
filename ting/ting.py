@@ -259,7 +259,7 @@ def calculate_distance(sequence1, sequence2, use_structural_boundaries):
 
 def output_clusters(output, clusters_tcr):
     nx.write_gml(clusters_tcr, f'{output[:-4]}.gml')
-    number_sequences = len(clusters_tcr.nodes())
+    number_sequences = len(clusters_tcr.nodes
     clusters_tcr = list(nx.connected_components(clusters_tcr))
     number_clusters = len([cluster for cluster in clusters_tcr if len(cluster) > 1])
     print(f'Clusters: {number_clusters}')
@@ -275,10 +275,18 @@ def local_clustering(tcr_sequences, kmer_file):
     print('\tClustering kmers...')
     kmer_clusters = cluster_kmers(three_mers, kmer_clusters)
     kmer_clusters = cluster_kmers(two_mers, kmer_clusters)
-    kmer_clusters = list(nx.connected_components(kmer_clusters))  # separate clusters
+    significant_kmers = remove_redundant_kmers(kmer_clusters)
     print('\tClustering CDR3b sequences...')
-    clusters_tcr = cluster_cdr3b(kmer_clusters, tcr_sequences)
+    clusters_tcr = cluster_cdr3b(significant_kmers, tcr_sequences)
     return clusters_tcr
+
+def remove_redundant_kmers(cluster):
+    redundant_kmers = []
+    for node in cluster.nodes:
+        if cluster.in_degree(node) > 0:
+            redundant_kmers.append(node)
+    cluster.remove_nodes_from(redundant_kmers)
+    return list(cluster.nodes)
 
 
 def cluster_kmers(kmers, clusters):
@@ -309,7 +317,7 @@ def cluster_cdr3b(kmer_clusters, tcr_sequences):
             clusters_tcr.append(new_cluster)
     # connect nodes
     for i in range(len(clusters_tcr)):
-        clusters_tcr[i].add_path(clusters_tcr[i].nodes())
+        clusters_tcr[i].add_path(clusters_tcr[i].nodes
     # join clusters
     clusters_tcr = nx.compose_all(clusters_tcr)
     return clusters_tcr
@@ -326,7 +334,7 @@ def load_kmers(input_file):
     print(f"Loading kmers from {input_file}")
     two_mers = []
     three_mers = []
-    clusters = nx.Graph()
+    four_mers = []
     with open(input_file, 'r') as kmer_file:
         kmer_file.readline()
         for line in kmer_file.readlines():
@@ -336,10 +344,10 @@ def load_kmers(input_file):
             elif len(kmer) == 3:
                 three_mers.append(kmer)
             elif len(kmer) == 4:
-                clusters.add_node(kmer)
+                four_mers.append(kmer)
             else:
                 print(kmer)
-    return two_mers, three_mers, clusters
+    return two_mers, three_mers, nx.DiGraph(four_mers)
 
 
 def argument_parser(parser):
