@@ -238,7 +238,7 @@ def sequences_to_dict(tcr_sequences, use_structural_boundaries):
         seq_length = len(sequence)
         if seq_length >= min_length:
             sequence_reduced = sequence[3:-3] if not use_structural_boundaries else sequence
-            sequence_reduced = np.fromstring(sequence_reduced, dtype='uint8')
+            sequence_reduced = np.frombuffer(sequence_reduced.encode(), dtype='uint8')
             if seq_length not in sequences_reduced:
                 sequences_reduced[seq_length] = list()
                 sequences_original[seq_length] = list()
