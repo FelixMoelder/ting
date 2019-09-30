@@ -292,9 +292,8 @@ def cluster_sequences(kmers, sequences, use_structural_boundaries):
     cluster_struct = UnionFind(sequences)
     for kmer in kmers:
         subcluster = []
-        for i, sequence in enumerate(sequences):
-            if not use_structural_boundaries:
-                sequence = sequence[3:-3]
+        for i in range(len(sequences)):
+            sequence = sequences[i][3:-3] if not use_structural_boundaries else sequences[i]
             if kmer in sequence:
                 subcluster.append(i)
         for i in range(len(subcluster)-1):
