@@ -7,6 +7,7 @@ import numpy as np
 import networkx as nx
 from collections import Counter
 from multiprocessing import Pool
+from itertools import combinations
 from scipy.stats import fisher_exact
 
 
@@ -33,7 +34,7 @@ def main():
             print('Motif file found')
         # Clustering by local similarity
         print('Local clustering')
-        local_clusters = local_clustering(tcr_sequences, args.kmer_file)
+        local_clusters = local_clustering(list(tcr_sequences), args.kmer_file, use_structural_boundaries)
         final_clusters.add_edges_from(local_clusters.edges())
     # Clustering by global similarity
     if cluster_global:
@@ -54,10 +55,10 @@ def kmer_preprocessing(tcr_sequences, args):
     number_seqs_control = len(reference_sequences)
     print('Counting kmers in sample set')
     kmers_condition = count_kmers(tcr_sequences, args.use_structural_boundaries)
-    print('Unique kmers in sample set: {len(kmers_condition)}')
+    print(f'Unique kmers in sample set: {len(kmers_condition)}')
     print('Counting kmers in control set')
     kmers_control = count_kmers(reference_sequences, args.use_structural_boundaries)
-    print('Unique kmers in control set: {len(kmers_control)}')
+    print(f'Unique kmers in control set: {len(kmers_control)}')
     print('Identifying significant kmers')
     identify_significant_kmers(number_seqs_condition, kmers_condition, number_seqs_control, kmers_control, args.max_p_value, args.kmer_file)
 
@@ -186,7 +187,6 @@ def load_filtered_tcr_sequences(sequence_file):
         for line in sequences.readlines():
             sequence = line.split('\t')[0]
             sequence = sequence.upper()
-            #if re.match('Ĉ[AC-WY]{3,}F$', sequence):
             if re.match('^C[AC-WY][AC-WY][AC-WY][AC-WY]*F', sequence):
                 tcr_sequences.add(sequence)
     return tcr_sequences
@@ -237,7 +237,7 @@ def sequences_to_dict(tcr_sequences, use_structural_boundaries):
         seq_length = len(sequence)
         if seq_length >= min_length:
             sequence_reduced = sequence[3:-3] if not use_structural_boundaries else sequence
-            sequence_reduced = np.fromstring(sequence_reduced, dtype='uint8')
+            sequence_reduced = np.frombuffer(sequence_reduced.encode(), dtype='uint8')
             if seq_length not in sequences_reduced:
                 sequences_reduced[seq_length] = list()
                 sequences_original[seq_length] = list()
@@ -246,20 +246,8 @@ def sequences_to_dict(tcr_sequences, use_structural_boundaries):
     return sequences_reduced, sequences_original
 
 
-def calculate_distance(sequence1, sequence2, use_structural_boundaries):
-    # Hamming distance of two sequences
-    if not use_structural_boundaries:
-        sequence1 = sequence1[3:-3]
-        sequence2 = sequence2[3:-3]
-    sequence1 = np.fromstring(sequence1, dtype='uint8')
-    sequence2 = np.fromstring(sequence2, dtype='uint8')
-    distance = np.count_nonzero(sequence1-sequence2)
-    return distance
-
-
 def output_clusters(output, clusters_tcr):
-    nx.write_gml(clusters_tcr, f'{output[:-4]}.gml')
-    number_sequences = len(clusters_tcr.nodes())
+    number_sequences = len(clusters_tcr.nodes)
     clusters_tcr = list(nx.connected_components(clusters_tcr))
     number_clusters = len([cluster for cluster in clusters_tcr if len(cluster) > 1])
     print(f'Clusters: {number_clusters}')
@@ -270,14 +258,14 @@ def output_clusters(output, clusters_tcr):
             print(cluster_content, file=output_file)
 
 
-def local_clustering(tcr_sequences, kmer_file):
+def local_clustering(tcr_sequences, kmer_file, use_structural_boundaries):
     two_mers, three_mers, kmer_clusters = load_kmers(kmer_file)
     print('\tClustering kmers...')
     kmer_clusters = cluster_kmers(three_mers, kmer_clusters)
     kmer_clusters = cluster_kmers(two_mers, kmer_clusters)
-    kmer_clusters = list(nx.connected_components(kmer_clusters))  # separate clusters
+    significant_kmers = remove_redundant_kmers(kmer_clusters)
     print('\tClustering CDR3b sequences...')
-    clusters_tcr = cluster_cdr3b(kmer_clusters, tcr_sequences)
+    clusters_tcr = cluster_sequences(significant_kmers, tcr_sequences, use_structural_boundaries)
     return clusters_tcr
 
 
@@ -291,28 +279,42 @@ def cluster_kmers(kmers, clusters):
     return clusters
 
 
-def cluster_cdr3b(kmer_clusters, tcr_sequences):
-    clusters_tcr = [nx.Graph() for _ in range(len(kmer_clusters))]
-    # add sequences to clusters
-    for sequence in tcr_sequences:
-        sequence_seen = False
-        for i, kmer_cluster in enumerate(kmer_clusters):
-            for kmer in kmer_cluster:
-                if kmer in sequence[3:-3]:
-                    clusters_tcr[i].add_node(sequence)
-                    sequence_seen = True
-                    break
-        # add sequence if not in cluster
-        if not sequence_seen:
-            new_cluster = nx.Graph()
-            new_cluster.add_node(sequence)
-            clusters_tcr.append(new_cluster)
-    # connect nodes
-    for i in range(len(clusters_tcr)):
-        clusters_tcr[i].add_path(clusters_tcr[i].nodes())
-    # join clusters
-    clusters_tcr = nx.compose_all(clusters_tcr)
-    return clusters_tcr
+def remove_redundant_kmers(cluster):
+    redundant_kmers = []
+    for node in cluster.nodes:
+        if cluster.in_degree(node) > 0:
+            redundant_kmers.append(node)
+    cluster.remove_nodes_from(redundant_kmers)
+    return list(cluster.nodes)
+
+
+def cluster_sequences(kmers, sequences, use_structural_boundaries):
+    cluster_struct = UnionFind(sequences)
+    for kmer in kmers:
+        subcluster = []
+        for i in range(len(sequences)):
+            sequence = sequences[i][3:-3] if not use_structural_boundaries else sequences[i]
+            if kmer in sequence:
+                subcluster.append(i)
+        for i in range(len(subcluster)-1):
+            cluster_struct.union(subcluster[i], subcluster[i+1])
+    clusters_nodes = summary_clusters(sequences, cluster_struct)
+    clusters = [nx.Graph() for _ in range(len(clusters_nodes))]
+    for i, nodes in enumerate(clusters_nodes):
+        clusters[i].add_nodes_from(nodes)
+        clusters[i].add_path(clusters[i].nodes)
+    return nx.compose_all(clusters)
+
+
+def summary_clusters(sequences, cluster_struct):
+    clusters = dict()
+    for i, sequence in enumerate(sequences):
+        cluster_id = cluster_struct.find_representative(i)
+        if cluster_id not in clusters:
+            clusters[cluster_id] = [sequence]
+        else:
+            clusters[cluster_id].append(sequence)
+    return clusters.values()
 
 
 def union_clusters(clusters):
@@ -321,12 +323,11 @@ def union_clusters(clusters):
         joined_clusters = nx.compose(joined_clusters, cluster)
     return joined_clusters
 
-
 def load_kmers(input_file):
     print(f"Loading kmers from {input_file}")
     two_mers = []
     three_mers = []
-    clusters = nx.Graph()
+    four_mers = []
     with open(input_file, 'r') as kmer_file:
         kmer_file.readline()
         for line in kmer_file.readlines():
@@ -336,10 +337,35 @@ def load_kmers(input_file):
             elif len(kmer) == 3:
                 three_mers.append(kmer)
             elif len(kmer) == 4:
-                clusters.add_node(kmer)
+                four_mers.append(kmer)
             else:
                 print(kmer)
-    return two_mers, three_mers, clusters
+    four_mers_graph = nx.DiGraph()
+    four_mers_graph.add_nodes_from(four_mers)
+    return two_mers, three_mers, four_mers_graph
+
+
+class UnionFind:
+
+    def __init__(self, sequences):
+        self.representatives = np.array(range(len(sequences)))
+
+
+    def union(self, i, j):
+        representative_i = self.find_representative(i)
+        representative_j = self.find_representative(j)
+        if representative_i < representative_j:
+            self.representatives[representative_j] = representative_i
+        elif representative_i > representative_j:
+            self.representatives[representative_i] = representative_j
+
+
+    def find_representative(self, i):
+        if self.representatives[i] == i:
+            return i
+        else:
+            self.representatives[i] = self.find_representative(self.representatives[i])
+        return self.representatives[i]
 
 
 def argument_parser(parser):
