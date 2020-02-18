@@ -6,7 +6,6 @@ import warnings
 import numpy as np
 import networkx as nx
 from collections import Counter
-from multiprocessing import Pool
 from itertools import combinations
 from scipy.stats import fisher_exact
 
@@ -91,10 +90,7 @@ def kmer_preprocessing_gliph(tcr_sequences, args):
         "Possible solutions:\n\t- Downsampling of input sequences\n"
         "\t- Use larger reference file", Warning)
         sys.exit(1)
-    with Pool(1) as p:
-        simulation_params = [(reference_sequences, number_sequences, args.use_structural_boundaries)
-                            for i in range(1000)]
-        simulated_kmers = p.starmap(simulate_sample_set, simulation_params)
+    simulated_kmers = [simulate_sample_set(reference_sequences, number_sequences, args.use_structural_boundaries) for i in range(1000)]
 
     print('Analyzing kmers')
     analyze_kmers(most_frequent_kmers, simulated_kmers, number_sequences, 1000, args.gliph_minp,
@@ -104,7 +100,6 @@ def kmer_preprocessing_gliph(tcr_sequences, args):
 def simulate_sample_set(sequences, set_size, use_structural_boundaries):
     random_sequences = np.random.choice(sequences, size=set_size, replace=False)
     kmers = count_kmers(random_sequences, use_structural_boundaries)
-    # total_counted_k_mers.append(kmers)
     return kmers
 
 
@@ -270,12 +265,15 @@ def local_clustering(tcr_sequences, kmer_file, use_structural_boundaries):
 
 
 def cluster_kmers(kmers, clusters):
-    for kmer in kmers:
-        for node in list(clusters.nodes):
-            if kmer in node:
-                clusters.add_edge(kmer, node)
-            else:
-                clusters.add_node(kmer)
+    if nx.number_of_nodes(clusters) == 0:
+        clusters.add_edges_from(kmers)
+    else:
+        for kmer in kmers:
+            for node in list(clusters.nodes):
+                if kmer in node:
+                    clusters.add_edge(kmer, node)
+                else:
+                    clusters.add_node(kmer)
     return clusters
 
 

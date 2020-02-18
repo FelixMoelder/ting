@@ -4,7 +4,7 @@ channels:
 - defaults
 dependencies:
 - python=3.7
-- networkx=2.3
+- networkx=2.4
 - numpy=1.17
 - scipy=1.3
 
