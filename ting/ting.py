@@ -20,8 +20,6 @@ def main():
     print(f"Loading sequences from: {args.tcr_sequences}")
     tcr_sequences = load_filtered_tcr_sequences(args.tcr_sequences) if args.stringent_filtering else load_tcr_sequences(args.tcr_sequences)
     print(f'Unique sequences loaded: {len(tcr_sequences)}')
-    final_clusters = nx.Graph()
-    final_clusters.add_nodes_from(tcr_sequences)
     if cluster_local:
         if not os.path.exists(args.kmer_file):
             # Process significant kmers
@@ -33,13 +31,19 @@ def main():
             print('Motif file found')
         # Clustering by local similarity
         print('Local clustering')
-        local_clusters = local_clustering(list(tcr_sequences), args.kmer_file, use_structural_boundaries)
-        final_clusters.add_edges_from(local_clusters.edges())
+        if len(open(args.kmer_file).readlines())-1 == 0:
+            final_clusters = nx.Graph()
+            final_clusters.add_nodes_from(tcr_sequences)
+        else:
+            final_clusters = local_clustering(list(tcr_sequences), args.kmer_file, use_structural_boundaries)
     # Clustering by global similarity
     if cluster_global:
         print('Global clustering')
         global_clusters = global_clustering(tcr_sequences, use_structural_boundaries)
-        final_clusters.add_edges_from(global_clusters.edges())
+        if cluster_local:
+            final_clusters.add_edges_from(global_clusters.edges())
+        else:
+            final_clusters = global_clusters
     output_clusters(args.output, final_clusters)
 
 
@@ -112,7 +116,7 @@ def analyze_kmers(most_frequent_kmers, simulated_kmers, set_size, number_simulat
             highest = 0
             average = 0
             for simulated_set in simulated_kmers:
-                kmer_occurrence_sim = simulated_set[kmer]
+                kmer_occurrence_control = simulated_set[kmer]
                 if kmer_occurrence_control >= kmer_count_sample:
                     odds_as_enriched_as_discovery += 1/number_simulations
                 highest = kmer_occurrence_control if kmer_occurrence_control > highest else highest
@@ -145,8 +149,6 @@ def get_minfoldchange(kmer_count):
 
 
 def identify_significant_kmers(seqs_condition, kmers_condition, seqs_control, kmers_control, p_value_threshold, kmer_file):
-    kmers_condition_count = sum(kmers_condition.values())
-    kmers_control_count = sum(kmers_control.values())
     seqs_condition += 2 # add pseudo count
     seqs_control += 2 # add pseudo count
     bonferroni_threshold = p_value_threshold/len(kmers_condition)
@@ -266,7 +268,7 @@ def local_clustering(tcr_sequences, kmer_file, use_structural_boundaries):
 
 def cluster_kmers(kmers, clusters):
     if nx.number_of_nodes(clusters) == 0:
-        clusters.add_edges_from(kmers)
+        clusters.add_nodes_from(kmers)
     else:
         for kmer in kmers:
             for node in list(clusters.nodes):
@@ -300,7 +302,7 @@ def cluster_sequences(kmers, sequences, use_structural_boundaries):
     clusters = [nx.Graph() for _ in range(len(clusters_nodes))]
     for i, nodes in enumerate(clusters_nodes):
         clusters[i].add_nodes_from(nodes)
-        clusters[i].add_path(clusters[i].nodes)
+        nx.add_path(clusters[i], clusters[i].nodes)
     return nx.compose_all(clusters)
 
 
@@ -404,10 +406,6 @@ def argument_parser(parser):
     parser.add_argument('-f', '--stringent_filtering',
                         help='If used only TCRs starting with a cystein and ending with phenylalanine will be used',
                         action='store_true')
-    parser.add_argument('-c', '--cores',
-                        help='Number of cores used for resampling. Default: 1',
-                        type=int,
-                        default=1)
     parser.add_argument('-g', '--kmers_gliph',
                         help='If set kmers are identified by the non-deterministic approach as implemented by gliph',
                         action='store_true')
