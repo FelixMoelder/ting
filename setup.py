@@ -18,7 +18,7 @@ setup(
     license='MIT License',
     url='https://github.com/FelixMoelder/ting',
     packages=['ting', 'scripts'],
-    install_requires=['networkx>=2.3', 'numpy>=1.17', 'scipy>=1.3'],
+    install_requires=['networkx>=2.4', 'numpy>=1.17', 'scipy>=1.3'],
     entry_points={
         "console_scripts":
             ["ting=ting.ting:main", "imseq2ting=scripts.imseq2ting:main"]
