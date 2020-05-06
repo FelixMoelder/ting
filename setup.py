@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='ting',
-    version='1.0',
+    version='1.0.1',
     author='Felix Mölder',
     author_email='felix.moelder@uni-due.de',
     description='ting - T cell receptor interaction grouping',
