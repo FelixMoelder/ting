@@ -49,17 +49,15 @@ Optional Input
 
     --no_local                      No local clustering will be performed.
 
-    --simulations                   Number of simulations that will be done for motif preprocessing. 
-                                    Default is 1000.
-
     --min_kmer_occurence            Only kmers which occure at least min_kmer_occurences times in the
                                     sequence sample set will be taken in account. Default is 3.
     
-    --max_p_value                   Only kmers with p_value < max_p_value will be used for clustering
+    --max_p_value                   p-value threshold for identifying significant motifs by fisher exact test
     
-    --cores                         Number of cores used for multiprocessing. Multiprocessing is done 
-                                    during sample set simulation. Default: 1
+    --gliph_minp                    probability threshold for identifying significant motifs by gliph test
 
     --stringent_filtering           Only TCRs starting with a cystein and ending with phenylalanine will be
                                     used (IGMT definition of CDR3 region). Default: False
+                                    
+    --kmers_gliph                   If set kmers are identified by the non-deterministic approach as implemented by gliph
 
