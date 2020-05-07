@@ -374,8 +374,7 @@ def argument_parser(parser):
                         type=str,
                         required=True)
     parser.add_argument('-r', '--reference',
-                        help='Reference fasta file of naive CDR3 amino acid sequences used for simulation of sample sets. \
-                        Example references are available on https://bitbucket.org/genomeinformatics/ting/',
+                        help='Reference fasta file of naive CDR3 amino acid sequences used for simulation of sample sets.',
                         type=str,
                         required=True)
     parser.add_argument('-k', '--kmer_file',

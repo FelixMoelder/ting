@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='ting',
+    name='bio-ting',
     version='1.0.1',
     author='Felix Mölder',
     author_email='felix.moelder@uni-due.de',
