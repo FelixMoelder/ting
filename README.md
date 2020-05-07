@@ -1,8 +1,10 @@
 [![PyPI version](https://badge.fury.io/py/bio-ting.svg)](https://badge.fury.io/py/bio-ting)
 
-# ting
-
+======
 ting - T cell receptor interaction grouping
+=====
+
+ting is a tool for clustering large scale T cell receptor repertoires by antigen-specificity
 
 Synopsis
 --------
