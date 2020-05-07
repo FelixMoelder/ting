@@ -1,7 +1,21 @@
+__author__ = "Felix Mölder"
+__copyright__ = "Copyright 2020, Felix Mölder"
+__email__ = "felix.moelder@uni-due.de"
+__license__ = "MIT"
+
 import sys
-from setuptools import setup
+
 # set __version__ and DESCRIPTION
 
+if sys.version_info < (3, 7):
+    print("At least Python 3.7 is required.\n", file=sys.stderr)
+    exit(1)
+
+try:
+    from setuptools import setup
+except ImportError:
+    print("Please install setuptools before installing ting.", file=sys.stderr)
+    exit(1)
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
