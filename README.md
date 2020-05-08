@@ -68,10 +68,10 @@ Optional Input
 ting can be run from source or be installed via [PyPI](https://pypi.org/project/bio-ting/) or [bioconda](https://bioconda.github.io/recipes/bio-ting/README.html?highlight=bio-ting#recipe-Recipe%20&#x27;bio-ting&#x27;)
 
 #### PiPI:
-    `pip install bio-ting`
+    pip install bio-ting
 
 #### conda:
-    `conda install -c bioconda bio-ting`
+    conda install -c bioconda bio-ting
 
 ## Example
 
