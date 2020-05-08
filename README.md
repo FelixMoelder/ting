@@ -63,3 +63,9 @@ Optional Input
                                     
     --kmers_gliph                   If set kmers are identified by the non-deterministic approach as implemented by gliph
 
+
+Example
+--------
+
+Samples are available on [BioRxiv](https://www.biorxiv.org/content/biorxiv/early/2020/05/05/2020.05.04.069914/DC1/embed/media-1.gz?download=true) as supplementary material.
+References have been created by the authors of [gliph](https://github.com/immunoengineer/gliph)([Glanville et al.](https://www.ncbi.nlm.nih.gov/pubmed/28636589))
