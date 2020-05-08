@@ -1,4 +1,4 @@
-[![PyPI version](https://img.shields.io/pypi/v/bio-ting?logo=PyPI)](https://badge.fury.io/py/bio-ting)
+[![PyPI version](https://img.shields.io/pypi/v/bio-ting?logo=PyPI)](https://pypi.org/project/bio-ting/)
 [![Bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](https://bioconda.github.io/recipes/bio-ting/README.html)
 # ting - T cell receptor interaction grouping
 
