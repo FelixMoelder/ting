@@ -1,5 +1,5 @@
-[![PyPI version](https://badge.fury.io/py/bio-ting.svg)](https://badge.fury.io/py/bio-ting)
-[![Bioconda](https://img.shields.io/conda/dn/bioconda/bio-ting.svg?label=Bioconda)](https://bioconda.github.io/recipes/bio-ting/README.html)
+[![PyPI version](https://img.shields.io/pypi/v/bio-ting?logo=PyPI)](https://badge.fury.io/py/bio-ting)
+[![Bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](https://bioconda.github.io/recipes/bio-ting/README.html)
 # ting - T cell receptor interaction grouping
 
 ting is a tool for clustering large scale T cell receptor repertoires by antigen-specificity
