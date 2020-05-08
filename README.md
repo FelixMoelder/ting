@@ -76,6 +76,7 @@ ting can be run from source or be installed via [PyPI](https://pypi.org/project/
 ## Example
 
 [Samples](https://www.biorxiv.org/content/biorxiv/early/2020/05/05/2020.05.04.069914/DC1/embed/media-1.gz?download=true) are available on BioRxiv ([Mölder et al.](https://www.biorxiv.org/content/10.1101/2020.05.04.069914v1)) as supplementary material.
+
 References have been created by the authors of [gliph](https://github.com/immunoengineer/gliph) ([Glanville et al.](https://www.ncbi.nlm.nih.gov/pubmed/28636589)).
 
 ```
