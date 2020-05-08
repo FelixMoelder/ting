@@ -6,7 +6,7 @@ ting is a tool for clustering large scale T cell receptor repertoires by antigen
 
 ## Synopsis
 
-ting [options]
+ting [options] -t sample.tsv -r reference.tsv -k kmer.tsv -o output.tsv
 
 ## Options
 
@@ -62,6 +62,16 @@ Optional Input
     --kmers_gliph                   If set kmers are identified by the non-deterministic approach as implemented by gliph
 
 ~~~~~~~~~~~~~~
+
+## Install
+
+ting can be run from source or be installed via [PyPI](https://pypi.org/project/bio-ting/) or [bioconda](https://bioconda.github.io/recipes/bio-ting/README.html?highlight=bio-ting#recipe-Recipe%20&#x27;bio-ting&#x27;)
+
+#### PiPI:
+    `pip install bio-ting`
+
+#### conda:
+    `conda install -c bioconda bio-ting`
 
 ## Example
 
