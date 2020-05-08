@@ -69,5 +69,5 @@ Optional Input
 References have been created by the authors of [gliph](https://github.com/immunoengineer/gliph) ([Glanville et al.](https://www.ncbi.nlm.nih.gov/pubmed/28636589)).
 
 ```
-ting --tcr_sequences sample.tsv --reference reference.fasta --kmer_file kmers.txt -o output.tsv
+ting --tcr_sequences R205-L01-D704D504.tsv --reference reference.fasta --kmer_file R205-L01-D704D504_kmers.tsv -o R205-L01-D704D504_results.tsv
 ```
