@@ -24,7 +24,8 @@ For compatibility reasons the tab seperated table of TCR sequences required for 
                                     clustering. If file does not exist it will automatically be
                                     generated.
 
-    --reference                     Reference file used for simulation of sample sets.
+    --reference                     Reference file of naive CDR3 amino acid sequences in fasta-format.
+                                    Used as control set by Fisher's exact test.
 
 Example:
 
