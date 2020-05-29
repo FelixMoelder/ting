@@ -1,5 +1,5 @@
-[![PyPI version](https://badge.fury.io/py/bio-ting.svg)](https://badge.fury.io/py/bio-ting)
-[![Bioconda](https://img.shields.io/conda/dn/bioconda/bio-ting.svg?label=Bioconda)](https://bioconda.github.io/recipes/bio-ting/README.html)
+[![PyPI version](https://img.shields.io/pypi/v/bio-ting?logo=PyPI)](https://pypi.org/project/bio-ting/)
+[![Bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](https://bioconda.github.io/recipes/bio-ting/README.html)
 # ting - T cell receptor interaction grouping
 
 ting is a tool for clustering large scale T cell receptor repertoires by antigen-specificity
@@ -24,7 +24,8 @@ For compatibility reasons the tab seperated table of TCR sequences required for 
                                     clustering. If file does not exist it will automatically be
                                     generated.
 
-    --reference                     Reference file used for simulation of sample sets.
+    --reference                     Reference file of naive CDR3 amino acid sequences in fasta-format.
+                                    Used as control set by Fisher's exact test.
 
 Example:
 
@@ -65,7 +66,7 @@ Optional Input
 
 ## Install
 
-ting can be run from source or be installed via [PyPI](https://pypi.org/project/bio-ting/) or [bioconda](https://bioconda.github.io/recipes/bio-ting/README.html?highlight=bio-ting#recipe-Recipe%20&#x27;bio-ting&#x27;)
+ting can be run from source or installed via [PyPI](https://pypi.org/project/bio-ting/) or [bioconda](https://bioconda.github.io/recipes/bio-ting/README.html?highlight=bio-ting#recipe-Recipe%20&#x27;bio-ting&#x27;)
 
 #### PiPI:
     pip install bio-ting
@@ -75,7 +76,7 @@ ting can be run from source or be installed via [PyPI](https://pypi.org/project/
 
 ## Example
 
-[Samples](https://www.biorxiv.org/content/biorxiv/early/2020/05/05/2020.05.04.069914/DC1/embed/media-1.gz?download=true) are available on BioRxiv ([Mölder et al.](https://www.biorxiv.org/content/10.1101/2020.05.04.069914v1)) as supplementary material.
+Example repertoires can be obtained from `repertoires.tar.gz` included in the `example_data`-folder
 
 References have been created by the authors of [gliph](https://github.com/immunoengineer/gliph) ([Glanville et al.](https://www.ncbi.nlm.nih.gov/pubmed/28636589)).
 

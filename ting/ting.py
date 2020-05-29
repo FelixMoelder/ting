@@ -374,7 +374,7 @@ def argument_parser(parser):
                         type=str,
                         required=True)
     parser.add_argument('-r', '--reference',
-                        help='Reference fasta file of naive CDR3 amino acid sequences used for simulation of sample sets.',
+                        help='Reference fasta file of naive CDR3 amino acid sequences used for estimation of significant k-mers.',
                         type=str,
                         required=True)
     parser.add_argument('-k', '--kmer_file',
@@ -395,11 +395,11 @@ def argument_parser(parser):
                         help='If set local clustering is excluded',
                         action='store_false')
     parser.add_argument('-p', '--max_p_value',
-                        help='p-value threshold for identifying significant motifs by fisher exact test',
+                        help='p-value threshold for identifying significant k-mers by fisher exact test',
                         type=float,
                         default=0.05)
     parser.add_argument('--gliph_minp',
-                        help='probability threshold for identifying significant motifs by gliph test',
+                        help='probability threshold for identifying significant k-mers by gliph test',
                         type=float,
                         default=0.001)
     parser.add_argument('-f', '--stringent_filtering',
