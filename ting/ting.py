@@ -192,9 +192,9 @@ def load_filtered_tcr_sequences(sequence_file):
 def load_reference_sequences(reference_file):
     cdr3b_sequences = set()
     with open(reference_file, 'r') as reference:
-        for line in reference.readlines():
-            line = line.split(';')
-            cdr3b_sequences.add(line[-1])
+        for i, line in enumerate(reference.readlines()):
+            if i%2==1:
+                cdr3b_sequences.add(line.strip())
     return list(cdr3b_sequences)
 
 
