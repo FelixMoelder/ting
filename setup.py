@@ -22,7 +22,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='bio-ting',
-    version='1.0.1',
+    version='1.0.2',
     author='Felix Mölder',
     author_email='felix.moelder@uni-due.de',
     description='ting - T cell receptor interaction grouping',
