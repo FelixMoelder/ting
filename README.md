@@ -83,3 +83,8 @@ References have been created by the authors of [gliph](https://github.com/immuno
 ```
 ting --tcr_sequences R205-L01-D704D504.tsv --reference reference.fasta --kmer_file R205-L01-D704D504_kmers.tsv -o R205-L01-D704D504_results.tsv
 ```
+
+## Citation
+
+For citation please refere to our preprint [Rapid T cell receptor interaction grouping with ting](https://www.biorxiv.org/content/10.1101/2020.05.04.069914v1).
+A peer review is currently in process.
