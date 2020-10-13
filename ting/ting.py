@@ -182,12 +182,13 @@ def analyze_kmers(
 
 
 def get_minfoldchange(kmer_count):
+    if kmer_count == 1:
+        return 10000
     if kmer_count == 2:
         return 1000
     elif kmer_count == 3:
         return 100
-    elif kmer_count >= 4:
-        return 10
+    return 10
 
 
 def identify_significant_kmers(
