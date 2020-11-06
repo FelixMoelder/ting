@@ -22,7 +22,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='bio-ting',
-    version='1.0.2',
+    version='1.1.0',
     author='Felix Mölder',
     author_email='felix.moelder@uni-due.de',
     description='ting - T cell receptor interaction grouping',
@@ -32,7 +32,7 @@ setup(
     license='MIT License',
     url='https://github.com/FelixMoelder/ting',
     packages=['ting', 'scripts'],
-    install_requires=['networkx>=2.4,<2.5', 'numpy>=1.17,<1.18', 'scipy>=1.3,<1.4'],
+    install_requires=['numpy>=1.17,<=1.19', 'scipy>=1.3,<=1.5'],
     entry_points={
         "console_scripts":
             ["ting=ting.ting:main", "imseq2ting=scripts.imseq2ting:main"]

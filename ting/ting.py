@@ -4,7 +4,6 @@ import os.path
 import argparse
 import warnings
 import numpy as np
-import networkx as nx
 from collections import Counter
 from itertools import combinations
 from scipy.stats import fisher_exact
@@ -35,21 +34,20 @@ def main():
             print("Motif file found")
         # Clustering by local similarity
         print("Local clustering")
-        if len(open(args.kmer_file).readlines()) - 1 == 0:
-            final_clusters = nx.Graph()
-            final_clusters.add_nodes_from(tcr_sequences)
-        else:
-            final_clusters = local_clustering(
-                list(tcr_sequences), args.kmer_file, use_structural_boundaries
-            )
+        local_struct = local_clustering(
+            tcr_sequences, args.kmer_file, use_structural_boundaries
+        )
     # Clustering by global similarity
     if cluster_global:
         print("Global clustering")
-        global_clusters = global_clustering(tcr_sequences, use_structural_boundaries)
-        if cluster_local:
-            final_clusters.add_edges_from(global_clusters.edges())
-        else:
-            final_clusters = global_clusters
+        global_edges = global_clustering(tcr_sequences, use_structural_boundaries)
+        final_struct = local_struct if cluster_local else UnionFind(tcr_sequences)
+
+        for seq1, seq2 in global_edges:
+            final_struct.union(seq1, seq2)
+        final_clusters = summarize_clusters(tcr_sequences, final_struct)
+    else:
+        final_clusters = summarize_clusters(tcr_sequences, local_struct)
     output_clusters(args.output, final_clusters)
 
 
@@ -230,7 +228,7 @@ def load_tcr_sequences(sequence_file):
             sequence = line.split("\t")[0]
             sequence = sequence.upper()
             tcr_sequences.add(sequence)
-    return tcr_sequences
+    return list(tcr_sequences)
 
 
 def load_filtered_tcr_sequences(sequence_file):
@@ -241,7 +239,7 @@ def load_filtered_tcr_sequences(sequence_file):
             sequence = sequence.upper()
             if re.match("^C[AC-WY][AC-WY][AC-WY][AC-WY]*F", sequence):
                 tcr_sequences.add(sequence)
-    return tcr_sequences
+    return list(tcr_sequences)
 
 
 def load_reference_sequences(reference_file):
@@ -274,19 +272,17 @@ def global_clustering(tcr_sequences, use_structural_boundaries):
     tcr_sequences_dict, sequences_original = sequences_to_dict(
         tcr_sequences, use_structural_boundaries
     )
-    clusters = nx.Graph()
-    clusters.add_nodes_from(tcr_sequences)
+    global_edges = set()
     for length in tcr_sequences_dict.keys():
         sequences = np.array(tcr_sequences_dict[length])  # list of sequences
         difference = sequences[:, np.newaxis] - sequences
         nonzeros = np.count_nonzero(difference, axis=2)
         edges = zip(*np.where(nonzeros <= max_distance))
-        edges = [
-            (sequences_original[length][x], sequences_original[length][y])
-            for x, y in edges
-        ]
-        clusters.add_edges_from(edges)
-    return clusters
+        for x, y in edges:
+            global_edges.add(
+                (sequences_original[length][x], sequences_original[length][y])
+            )
+    return global_edges
 
 
 def sequences_to_dict(tcr_sequences, use_structural_boundaries):
@@ -294,7 +290,7 @@ def sequences_to_dict(tcr_sequences, use_structural_boundaries):
     min_length = 8  # sequences must be at least 8 chars long
     sequences_reduced = dict()
     sequences_original = dict()
-    for sequence in tcr_sequences:
+    for (i, sequence) in enumerate(tcr_sequences):
         seq_length = len(sequence)
         if seq_length >= min_length:
             sequence_reduced = (
@@ -304,17 +300,15 @@ def sequences_to_dict(tcr_sequences, use_structural_boundaries):
             if seq_length not in sequences_reduced:
                 sequences_reduced[seq_length] = list()
                 sequences_original[seq_length] = list()
-            sequences_original[seq_length].append(sequence)
+            sequences_original[seq_length].append(i)
             sequences_reduced[seq_length].append(sequence_reduced)
     return sequences_reduced, sequences_original
 
 
 def output_clusters(output, clusters_tcr):
-    number_sequences = len(clusters_tcr.nodes)
-    clusters_tcr = list(nx.connected_components(clusters_tcr))
+    number_sequences = len([seq for cluster in clusters_tcr for seq in cluster])
     number_clusters = len([cluster for cluster in clusters_tcr if len(cluster) > 1])
     print(f"Clusters: {number_clusters}")
-    print(f"Unique Sequences: {number_sequences}")
     with open(output, "w") as output_file:
         for cluster in clusters_tcr:
             cluster_content = f"{len(cluster)}\t{list(cluster)[0]}\t" + " ".join(
@@ -324,38 +318,26 @@ def output_clusters(output, clusters_tcr):
 
 
 def local_clustering(tcr_sequences, kmer_file, use_structural_boundaries):
-    two_mers, three_mers, kmer_clusters = load_kmers(kmer_file)
+    two_mers, three_mers, four_mers = load_kmers(kmer_file)
     print("\tClustering kmers...")
-    kmer_clusters = cluster_kmers(three_mers, kmer_clusters)
-    kmer_clusters = cluster_kmers(two_mers, kmer_clusters)
-    significant_kmers = remove_redundant_kmers(kmer_clusters)
+    distinct_kmers = reduce_kmers(two_mers, three_mers)
+    distinct_kmers = reduce_kmers(distinct_kmers, four_mers)
     print("\tClustering CDR3b sequences...")
     clusters_tcr = cluster_sequences(
-        significant_kmers, tcr_sequences, use_structural_boundaries
+        distinct_kmers, tcr_sequences, use_structural_boundaries
     )
     return clusters_tcr
 
 
-def cluster_kmers(kmers, clusters):
-    if nx.number_of_nodes(clusters) == 0:
-        clusters.add_nodes_from(kmers)
-    else:
-        for kmer in kmers:
-            for node in list(clusters.nodes):
-                if kmer in node:
-                    clusters.add_edge(kmer, node)
-                else:
-                    clusters.add_node(kmer)
-    return clusters
-
-
-def remove_redundant_kmers(cluster):
+def reduce_kmers(distinct_kmers, candidate_kmers):
     redundant_kmers = []
-    for node in cluster.nodes:
-        if cluster.in_degree(node) > 0:
-            redundant_kmers.append(node)
-    cluster.remove_nodes_from(redundant_kmers)
-    return list(cluster.nodes)
+    for (i, candidate_kmer) in enumerate(candidate_kmers):
+        for unique_kmer in distinct_kmers:
+            if unique_kmer in candidate_kmer:
+                redundant_kmers.append(i)
+                break
+    np.delete(candidate_kmers, redundant_kmers)
+    return np.append(distinct_kmers, candidate_kmers)
 
 
 def cluster_sequences(kmers, sequences, use_structural_boundaries):
@@ -370,15 +352,10 @@ def cluster_sequences(kmers, sequences, use_structural_boundaries):
                 subcluster.append(i)
         for i in range(len(subcluster) - 1):
             cluster_struct.union(subcluster[i], subcluster[i + 1])
-    clusters_nodes = summary_clusters(sequences, cluster_struct)
-    clusters = [nx.Graph() for _ in range(len(clusters_nodes))]
-    for i, nodes in enumerate(clusters_nodes):
-        clusters[i].add_nodes_from(nodes)
-        nx.add_path(clusters[i], clusters[i].nodes)
-    return nx.compose_all(clusters)
+    return cluster_struct
 
 
-def summary_clusters(sequences, cluster_struct):
+def summarize_clusters(sequences, cluster_struct):
     clusters = dict()
     for i, sequence in enumerate(sequences):
         cluster_id = cluster_struct.find_representative(i)
@@ -386,14 +363,7 @@ def summary_clusters(sequences, cluster_struct):
             clusters[cluster_id] = [sequence]
         else:
             clusters[cluster_id].append(sequence)
-    return clusters.values()
-
-
-def union_clusters(clusters):
-    joined_clusters = nx.Graph()
-    for cluster in clusters:
-        joined_clusters = nx.compose(joined_clusters, cluster)
-    return joined_clusters
+    return [set(cluster) for cluster in clusters.values()]
 
 
 def load_kmers(input_file):
@@ -413,9 +383,7 @@ def load_kmers(input_file):
                 four_mers.append(kmer)
             else:
                 print(kmer)
-    four_mers_graph = nx.DiGraph()
-    four_mers_graph.add_nodes_from(four_mers)
-    return two_mers, three_mers, four_mers_graph
+    return np.array(two_mers), np.array(three_mers), np.array(four_mers)
 
 
 class UnionFind:
